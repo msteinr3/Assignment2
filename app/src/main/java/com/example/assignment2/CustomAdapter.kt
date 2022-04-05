@@ -3,14 +3,11 @@ package com.example.assignment2
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Filter
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import java.util.*
-import kotlin.collections.ArrayList
 
-class CustomAdapter(private val contactList: List<ItemFields>) : RecyclerView.Adapter<CustomAdapter.ViewHolder>() {
+class CustomAdapter(private val contactList: List<ContactInfo>) : RecyclerView.Adapter<CustomAdapter.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val itemView = LayoutInflater.from(parent.context)
@@ -24,6 +21,7 @@ class CustomAdapter(private val contactList: List<ItemFields>) : RecyclerView.Ad
         holder.image.setImageResource(currentItem.image)
         holder.name.text = currentItem.name
         holder.phone.text = currentItem.phone
+        //holder.email.text = currentItem.email
     }
 
     // return the number of the items in the list
@@ -36,6 +34,7 @@ class CustomAdapter(private val contactList: List<ItemFields>) : RecyclerView.Ad
         val image: ImageView = itemView.findViewById(R.id.image)
         val name: TextView = itemView.findViewById(R.id.name)
         val phone: TextView = itemView.findViewById(R.id.phone)
+        //val email: TextView = itemView.findViewById(R.id.email)
     }
 }
 

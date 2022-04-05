@@ -2,7 +2,7 @@ package com.example.assignment2
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.content.ContentUris
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Address
 import android.location.Geocoder
@@ -20,19 +20,17 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.tasks.Task
 import java.util.*
 
-
 open class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
-
-
-    private var columns = listOf<String>(
+    private var rows = listOf(                                           //more info?
+        ContactsContract.Data.PHOTO_ID,                                  //need a photo (bitmap?)
         ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
         ContactsContract.CommonDataKinds.Phone.NUMBER,
+        ContactsContract.CommonDataKinds.Email.ADDRESS,                  //not an email?
         ContactsContract.CommonDataKinds.Phone._ID
     ).toTypedArray()
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,56 +42,86 @@ open class MainActivity : AppCompatActivity() {
             getLocation()
         }
 
-        binding.sendLocation.setOnClickListener {
+        binding.loadContacts.setOnClickListener {
             readContacts()
         }
-    }
 
-    @SuppressLint("Range")
-    private fun readContacts() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS)
-            != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_CONTACTS), 102)
+        binding.sendLocation.setOnClickListener {
+            sendMessage()
         }
-        binding.recycler.layoutManager = LinearLayoutManager(this)
-        val data = ArrayList<ItemFields>()
-        binding.recycler.adapter = CustomAdapter(data)
-
-        val cursor = contentResolver.query(ContactsContract.Data.CONTENT_URI,
-            null, ContactsContract.CommonDataKinds.Phone.CONTACT_ID, null, null)
-
-        while (cursor!!.moveToNext()) {
-
-            val name = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
-            val phone = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER))
-            //data.add(ItemFields(R.drawable.ic_baseline_person, name, phone))
-        }
-        cursor.close()
-
-        // Test data
-        for (i in 1..20) { data.add(ItemFields(R.drawable.ic_baseline_person, "Item " + i, "8474630156")) }
     }
-
 
     private fun getLocation() {
         val task: Task<Location> = fusedLocationProviderClient.lastLocation
         val geocoder = Geocoder(this, Locale.getDefault())
-        var addresses:List<Address>
+        var addresses: List<Address>
 
-        if ((ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                    != PackageManager.PERMISSION_GRANTED)
-            && ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
-            != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 101)
+        if ((ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED)
+            && ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                101
+            )
             return
         }
         task.addOnSuccessListener {
-            if(it != null){
+            if (it != null) {
                 addresses = geocoder.getFromLocation(it.latitude, it.longitude, 1)
                 binding.latitude.text = it.latitude.toString()
                 binding.longitude.text = it.longitude.toString()
                 binding.address.text = addresses[0].getAddressLine(0)
             }
         }
+    }
+
+    @SuppressLint("Range")
+    private fun readContacts() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS)
+            != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_CONTACTS), 102)
+        }
+        binding.recycler.layoutManager = LinearLayoutManager(this)
+        val data = ArrayList<ContactInfo>()
+        binding.recycler.adapter = CustomAdapter(data)
+
+        val cursor = contentResolver.query(
+            ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+            rows, null, null, ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME
+        )
+
+        while (cursor!!.moveToNext()) {
+            val image = R.drawable.ic_baseline_person
+            val name = cursor.getString(1)
+            val phone = cursor.getString(2)
+            val email = cursor.getString(3)
+            data.add(ContactInfo(image, name, phone))
+        }
+        cursor.close()
+    }
+
+    private fun sendMessage() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS)
+            != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.SEND_SMS), 103)
+        }
+
+        val intent = Intent(Intent.ACTION_SEND).apply {                 //not sure which action
+            data = Uri.parse(binding.address.text.toString())           //should be address from getLocation
+        }
+        startActivity(intent)
+
+        //other permissions needed? whatsapp, email...
+        //send location (address) to the contact that was clicked on
+        //options to send as text, whatsapp, email... which action?
     }
 }
