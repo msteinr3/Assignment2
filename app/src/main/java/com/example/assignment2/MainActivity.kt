@@ -24,6 +24,15 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.tasks.Task
 import java.util.*
 
+
+//questions:
+//other permissions needed? whatsapp, email...
+//options to send as something else (not sms)
+//what is MIME type
+//more types of info from contact
+//photo bitmap?
+//review thread coroutines, delay action
+
 open class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
@@ -52,7 +61,7 @@ open class MainActivity : AppCompatActivity() {
         binding.getLocation.setOnClickListener {
             fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
             getLocation()
-            binding.loadContacts.visibility = View.VISIBLE          //delay till address shows up
+            binding.loadContacts.visibility = View.VISIBLE          //how to delay till address shows up
 
         }
 
@@ -170,12 +179,5 @@ open class MainActivity : AppCompatActivity() {
         val alert = builder.create()
         alert.setTitle(getString(R.string.send_location))
         alert.show()
-
-
-        //questions:
-        //other permissions needed? whatsapp, email...
-        //options to send as something else (not sms)
-        //what is MIME type
-
     }
 }
