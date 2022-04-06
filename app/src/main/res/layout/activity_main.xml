@@ -11,7 +11,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="15dp"
-        android:text="@string/assignment_2"
+        android:text="@string/locator"
         android:textColor="@color/black"
         android:textSize="30sp"
         app:layout_constraintLeft_toLeftOf="parent"
@@ -32,7 +32,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="15dp"
-        android:text="Latitude: "
+        android:text="@string/latitude"
         android:textColor="@color/black"
         android:textSize="20sp"
         app:layout_constraintStart_toStartOf="parent"
@@ -51,7 +51,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="15dp"
-        android:text="Longitude: "
+        android:text="@string/longitude"
         android:textColor="@color/black"
         android:textSize="20sp"
         app:layout_constraintStart_toStartOf="parent"
@@ -70,7 +70,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="15dp"
-        android:text="Address: "
+        android:text="@string/address"
         android:textColor="@color/black"
         android:textSize="20sp"
         app:layout_constraintStart_toStartOf="parent"
@@ -89,7 +89,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="15dp"
-        android:text="Load Contacts"
+        android:text="@string/load_contacts"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/address" />
 
@@ -117,8 +117,19 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="15dp"
-        android:text="@string/send_location"
+        android:text="@string/sendTo"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/recycler" />
+
+    <TextView
+        android:id="@+id/contactChosen"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:textSize="20sp"
+        android:textColor="@color/black"
+        app:layout_constraintStart_toEndOf ="@+id/sendLocation"
+        app:layout_constraintTop_toBottomOf="@+id/recycler"
+        />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

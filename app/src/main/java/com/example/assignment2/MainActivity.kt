@@ -2,6 +2,7 @@ package com.example.assignment2
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Address
@@ -10,6 +11,9 @@ import android.location.Location
 import android.net.Uri
 import android.os.Bundle
 import android.provider.ContactsContract
+import android.view.View
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -24,12 +28,15 @@ open class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
-    private var rows = listOf(                                           //more info?
+    private lateinit var address: String
+    private lateinit var contact: String
+    private lateinit var phone: String
+    private var rows = listOf(
         ContactsContract.Data.PHOTO_ID,                                  //need a photo (bitmap?)
         ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
-        ContactsContract.CommonDataKinds.Phone.NUMBER,
-        ContactsContract.CommonDataKinds.Email.ADDRESS,                  //not an email?
-        ContactsContract.CommonDataKinds.Phone._ID
+        ContactsContract.CommonDataKinds.Phone.NUMBER,                   //how to specify mobile
+        ContactsContract.CommonDataKinds.Email.ADDRESS,                  //not getting an email?
+        ContactsContract.CommonDataKinds.Phone._ID                       //what for?
     ).toTypedArray()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,13 +44,21 @@ open class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        //don't show views until needed
+        binding.sendLocation.visibility = View.INVISIBLE
+        binding.loadContacts.visibility = View.INVISIBLE
+        binding.search.visibility = View.INVISIBLE
+
         binding.getLocation.setOnClickListener {
             fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
             getLocation()
+            binding.loadContacts.visibility = View.VISIBLE          //delay till address shows up
+
         }
 
         binding.loadContacts.setOnClickListener {
             readContacts()
+            binding.search.visibility = View.VISIBLE
         }
 
         binding.sendLocation.setOnClickListener {
@@ -77,7 +92,8 @@ open class MainActivity : AppCompatActivity() {
                 addresses = geocoder.getFromLocation(it.latitude, it.longitude, 1)
                 binding.latitude.text = it.latitude.toString()
                 binding.longitude.text = it.longitude.toString()
-                binding.address.text = addresses[0].getAddressLine(0)
+                address = addresses[0].getAddressLine(0)
+                binding.address.text = address
             }
         }
     }
@@ -91,7 +107,16 @@ open class MainActivity : AppCompatActivity() {
         }
         binding.recycler.layoutManager = LinearLayoutManager(this)
         val data = ArrayList<ContactInfo>()
-        binding.recycler.adapter = CustomAdapter(data)
+        val adapt = CustomAdapter(data)
+        binding.recycler.adapter = adapt
+        adapt.setOnItemClickedListener(object : CustomAdapter.onItemClickListener {
+            override fun onItemClicked(position: Int) {
+                contact = data[position].name
+                phone = data[position].phone
+                binding.contactChosen.text = contact
+                binding.sendLocation.visibility = View.VISIBLE
+            }
+        })
 
         val cursor = contentResolver.query(
             ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
@@ -102,26 +127,55 @@ open class MainActivity : AppCompatActivity() {
             val image = R.drawable.ic_baseline_person
             val name = cursor.getString(1)
             val phone = cursor.getString(2)
-            val email = cursor.getString(3)
+            //val email = cursor.getString(3)
             data.add(ContactInfo(image, name, phone))
         }
         cursor.close()
     }
 
     private fun sendMessage() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS)
-            != PackageManager.PERMISSION_GRANTED
-        ) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.SEND_SMS), 103)
-        }
+        val builder = AlertDialog.Builder(this)
+        builder.setMessage(getString(R.string.ru_sure) + " " + contact + "?")
+        builder.setIcon(R.drawable.ic_baseline_location_on)
+        builder.setPositiveButton(
+            getString(R.string.send),
+            DialogInterface.OnClickListener { dialog, id ->
+                dialog.cancel()
+                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS)
+                    != PackageManager.PERMISSION_GRANTED
+                ) {
+                    ActivityCompat.requestPermissions(
+                        this,
+                        arrayOf(Manifest.permission.SEND_SMS),
+                        103
+                    )
+                }
+                try {
+                    val i = Intent(Intent.ACTION_VIEW)
+                    i.data = Uri.parse("smsto:")
+                    //i.type = "vnd.android-dir/mms-sms"
+                    i.putExtra("address", phone)
+                    i.putExtra("sms_body", address)
+                    startActivity(Intent.createChooser(i, "Send sms via:"))
+                } catch (e: Exception) {
+                    Toast.makeText(this, "Failed to send message", Toast.LENGTH_LONG).show()
+                }
+            })
+        builder.setNegativeButton(
+            getString(R.string.cancel),
+            DialogInterface.OnClickListener { dialog, id ->
+                dialog.cancel()
+            })
 
-        val intent = Intent(Intent.ACTION_SEND).apply {                 //not sure which action
-            data = Uri.parse(binding.address.text.toString())           //should be address from getLocation
-        }
-        startActivity(intent)
+        val alert = builder.create()
+        alert.setTitle(getString(R.string.send_location))
+        alert.show()
 
+
+        //questions:
         //other permissions needed? whatsapp, email...
-        //send location (address) to the contact that was clicked on
-        //options to send as text, whatsapp, email... which action?
+        //options to send as something else (not sms)
+        //what is MIME type
+
     }
 }

@@ -9,10 +9,19 @@ import androidx.recyclerview.widget.RecyclerView
 
 class CustomAdapter(private val contactList: List<ContactInfo>) : RecyclerView.Adapter<CustomAdapter.ViewHolder>() {
 
+    private lateinit var mlistener : onItemClickListener
+    interface onItemClickListener{
+        fun onItemClicked(position: Int)
+    }
+
+    fun setOnItemClickedListener(listener: onItemClickListener) {
+        mlistener = listener
+    }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val itemView = LayoutInflater.from(parent.context)
             .inflate(R.layout.contact, parent, false)
-        return ViewHolder(itemView)
+        return ViewHolder(itemView, mlistener)
     }
 
     // binds the list items to a view
@@ -30,11 +39,17 @@ class CustomAdapter(private val contactList: List<ContactInfo>) : RecyclerView.A
     }
 
     // Holds the views for adding it to image and text
-    class ViewHolder(ItemView: View) : RecyclerView.ViewHolder(ItemView) {
+    class ViewHolder(ItemView: View, listener: onItemClickListener) : RecyclerView.ViewHolder(ItemView) {
         val image: ImageView = itemView.findViewById(R.id.image)
         val name: TextView = itemView.findViewById(R.id.name)
         val phone: TextView = itemView.findViewById(R.id.phone)
         //val email: TextView = itemView.findViewById(R.id.email)
+
+        init {
+            itemView.setOnClickListener {
+                listener.onItemClicked(absoluteAdapterPosition)
+            }
+        }
     }
 }
 

@@ -1,6 +1,14 @@
 <resources>
     <string name="app_name">Assignment 2</string>
     <string name="get_location">Get Location</string>
-    <string name="assignment_2">Assignment 2</string>
+    <string name="locator">Locator</string>
+    <string name="sendTo">Send to:</string>
+    <string name="longitude">Longitude:</string>
+    <string name="address">Address:</string>
+    <string name="latitude">Latitude:</string>
+    <string name="load_contacts">Load Contacts</string>
+    <string name="cancel">Cancel</string>
+    <string name="send">Send</string>
     <string name="send_location">Send Location</string>
+    <string name="ru_sure">Are you sure you want to send your location to</string>
 </resources>
