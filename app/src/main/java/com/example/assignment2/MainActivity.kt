@@ -1,10 +1,14 @@
 package com.example.assignment2
 
 import android.Manifest
+import android.R.attr.bitmap
 import android.annotation.SuppressLint
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
 import android.location.Address
 import android.location.Geocoder
 import android.location.Location
@@ -30,8 +34,9 @@ import java.util.*
 //options to send as something else (not sms)
 //what is MIME type
 //more types of info from contact
-//photo bitmap?
+//photo bitmap/drawable/Int?
 //review thread coroutines, delay action
+//implement search bar
 
 open class MainActivity : AppCompatActivity() {
 
@@ -41,7 +46,7 @@ open class MainActivity : AppCompatActivity() {
     private lateinit var contact: String
     private lateinit var phone: String
     private var rows = listOf(
-        ContactsContract.Data.PHOTO_ID,                                  //need a photo (bitmap?)
+        ContactsContract.Data.PHOTO_ID,                                  //need a photo (bitmap? drawable?)
         ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
         ContactsContract.CommonDataKinds.Phone.NUMBER,                   //how to specify mobile
         ContactsContract.CommonDataKinds.Email.ADDRESS,                  //not getting an email?
@@ -137,6 +142,7 @@ open class MainActivity : AppCompatActivity() {
             val name = cursor.getString(1)
             val phone = cursor.getString(2)
             //val email = cursor.getString(3)
+
             data.add(ContactInfo(image, name, phone))
         }
         cursor.close()

@@ -3,6 +3,8 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="app/src/main/res/drawable/contact_background.xml" value="0.115" />
+        <entry key="app/src/main/res/drawable/search_view_background.xml" value="0.1155" />
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.27246500651041666" />
         <entry key="app/src/main/res/layout/contact.xml" value="0.21484375" />
       </map>

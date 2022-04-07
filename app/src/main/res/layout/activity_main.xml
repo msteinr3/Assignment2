@@ -98,7 +98,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="15dp"
-        android:background="@color/teal_200"
+        android:background="@drawable/search_view_background"
+        android:iconifiedByDefault="false"
+        android:queryHint="Search"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/loadContacts" />
 
@@ -126,10 +128,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="10dp"
-        android:textSize="20sp"
         android:textColor="@color/black"
-        app:layout_constraintStart_toEndOf ="@+id/sendLocation"
-        app:layout_constraintTop_toBottomOf="@+id/recycler"
-        />
+        android:textSize="20sp"
+        app:layout_constraintStart_toEndOf="@+id/sendLocation"
+        app:layout_constraintTop_toBottomOf="@+id/recycler" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
