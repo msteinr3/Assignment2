@@ -11,4 +11,7 @@
     <string name="send">Send</string>
     <string name="send_location">Send Location</string>
     <string name="ru_sure">Are you sure you want to send your location to</string>
+    <string name="name">Name</string>
+    <string name="phone">Phone</string>
+    <string name="fail">Failed to send message</string>
 </resources>

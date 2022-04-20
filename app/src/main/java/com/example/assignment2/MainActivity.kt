@@ -1,14 +1,10 @@
 package com.example.assignment2
 
 import android.Manifest
-import android.R.attr.bitmap
 import android.annotation.SuppressLint
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
-import android.graphics.drawable.BitmapDrawable
-import android.graphics.drawable.Drawable
 import android.location.Address
 import android.location.Geocoder
 import android.location.Location
@@ -26,19 +22,16 @@ import com.example.assignment2.databinding.ActivityMainBinding
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.tasks.Task
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.launch
 import java.util.*
 
-
-//questions:
-//other permissions needed? whatsapp, email...
-//options to send as something else (not sms)
-//what is MIME type
-//more types of info from contact
-//photo bitmap/drawable/Int?
-//review thread coroutines, delay action
-//implement search bar
-
 open class MainActivity : AppCompatActivity() {
+
+    //things to do:
+    //coroutines for get location and read contacts
+    //explain need for permissions, provide button to settings
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
@@ -46,11 +39,8 @@ open class MainActivity : AppCompatActivity() {
     private lateinit var contact: String
     private lateinit var phone: String
     private var rows = listOf(
-        ContactsContract.Data.PHOTO_ID,                                  //need a photo (bitmap? drawable?)
         ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
-        ContactsContract.CommonDataKinds.Phone.NUMBER,                   //how to specify mobile
-        ContactsContract.CommonDataKinds.Email.ADDRESS,                  //not getting an email?
-        ContactsContract.CommonDataKinds.Phone._ID                       //what for?
+        ContactsContract.CommonDataKinds.Phone.NUMBER,
     ).toTypedArray()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -59,28 +49,29 @@ open class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         //don't show views until needed
-        binding.sendLocation.visibility = View.INVISIBLE
         binding.loadContacts.visibility = View.INVISIBLE
-        binding.search.visibility = View.INVISIBLE
+        binding.text.visibility = View.INVISIBLE
 
         binding.getLocation.setOnClickListener {
             fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
-            getLocation()
-            binding.loadContacts.visibility = View.VISIBLE          //how to delay till address shows up
 
+            CoroutineScope(IO).launch {
+                getLocation()
+            }
         }
 
         binding.loadContacts.setOnClickListener {
-            readContacts()
-            binding.search.visibility = View.VISIBLE
-        }
-
-        binding.sendLocation.setOnClickListener {
-            sendMessage()
+            //CoroutineScope(IO).launch {
+                readContacts()
+            //}
         }
     }
 
-    private fun getLocation() {
+    private fun setAddress(input: String) {
+        binding.address.text = input
+    }
+
+    private suspend fun getLocation() {
         val task: Task<Location> = fusedLocationProviderClient.lastLocation
         val geocoder = Geocoder(this, Locale.getDefault())
         var addresses: List<Address>
@@ -101,18 +92,20 @@ open class MainActivity : AppCompatActivity() {
             )
             return
         }
+
         task.addOnSuccessListener {
             if (it != null) {
+                binding.text.visibility = View.VISIBLE
+                binding.loadContacts.visibility = View.VISIBLE
+
                 addresses = geocoder.getFromLocation(it.latitude, it.longitude, 1)
-                binding.latitude.text = it.latitude.toString()
-                binding.longitude.text = it.longitude.toString()
                 address = addresses[0].getAddressLine(0)
-                binding.address.text = address
+
+                setAddress(address)
             }
         }
     }
 
-    @SuppressLint("Range")
     private fun readContacts() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS)
             != PackageManager.PERMISSION_GRANTED
@@ -120,15 +113,14 @@ open class MainActivity : AppCompatActivity() {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_CONTACTS), 102)
         }
         binding.recycler.layoutManager = LinearLayoutManager(this)
-        val data = ArrayList<ContactInfo>()
-        val adapt = CustomAdapter(data)
+        val data = ArrayList<Contact>()
+        val adapt = ContactAdapter(data)
         binding.recycler.adapter = adapt
-        adapt.setOnItemClickedListener(object : CustomAdapter.onItemClickListener {
+        adapt.setOnItemClickedListener(object : ContactAdapter.ItemClickListener {
             override fun onItemClicked(position: Int) {
                 contact = data[position].name
                 phone = data[position].phone
-                binding.contactChosen.text = contact
-                binding.sendLocation.visibility = View.VISIBLE
+                sendMessage()
             }
         })
 
@@ -138,17 +130,23 @@ open class MainActivity : AppCompatActivity() {
         )
 
         while (cursor!!.moveToNext()) {
-            val image = R.drawable.ic_baseline_person
-            val name = cursor.getString(1)
-            val phone = cursor.getString(2)
-            //val email = cursor.getString(3)
-
-            data.add(ContactInfo(image, name, phone))
+            val name = cursor.getString(0)
+            val phone = cursor.getString(1)
+            data.add(Contact(name, phone))
         }
         cursor.close()
     }
 
     private fun sendMessage() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS)
+            != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.SEND_SMS),
+                103
+            )
+        }
         val builder = AlertDialog.Builder(this)
         builder.setMessage(getString(R.string.ru_sure) + " " + contact + "?")
         builder.setIcon(R.drawable.ic_baseline_location_on)
@@ -156,24 +154,14 @@ open class MainActivity : AppCompatActivity() {
             getString(R.string.send),
             DialogInterface.OnClickListener { dialog, id ->
                 dialog.cancel()
-                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS)
-                    != PackageManager.PERMISSION_GRANTED
-                ) {
-                    ActivityCompat.requestPermissions(
-                        this,
-                        arrayOf(Manifest.permission.SEND_SMS),
-                        103
-                    )
-                }
                 try {
                     val i = Intent(Intent.ACTION_VIEW)
                     i.data = Uri.parse("smsto:")
-                    //i.type = "vnd.android-dir/mms-sms"
                     i.putExtra("address", phone)
                     i.putExtra("sms_body", address)
                     startActivity(Intent.createChooser(i, "Send sms via:"))
                 } catch (e: Exception) {
-                    Toast.makeText(this, "Failed to send message", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this, getString(R.string.fail), Toast.LENGTH_LONG).show()
                 }
             })
         builder.setNegativeButton(
